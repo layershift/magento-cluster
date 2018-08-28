@@ -128,7 +128,7 @@ onInstall:
 
 - log: Downloading, Unpacking, Installation and Patching Magento
 - cmd[storage]:
-  - rm -rf /data/* && wget -qO- '${globals.PATH}/releases/${settings.magento_version}' | tar xz -C /data/
+  - rm -rf /data/* && wget -qO- 'https://github.com/layershift/magento-cluster/raw/master/releases/${settings.magento_version}' | tar xz -C /data/
   - chown 700:700 -Rh /data/
 
 - cmd[cp]: wget ${globals.PATH}/configs/nginx/site-default-mg2.conf -O /etc/nginx/conf.d/site-default.conf
