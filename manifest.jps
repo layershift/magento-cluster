@@ -142,8 +142,6 @@ onInstall:
   - wget ${globals.PATH}/scripts/setupMG2.sh -O /tmp/setupMG2.sh && bash -x /tmp/setupMG2.sh
       ${globals.DB_USER} ${globals.DB_PASS} DB_MASTER ${globals.DB_NAME} ${globals.ADMIN_PASSWD}
       ${globals.MAGE_ROOT} ${env.url} ${user.email} &>> /var/log/run.log
-- setupRDConnect:
-  config: /data/app/etc/env.php
 
 actions:
   setupCP:
@@ -178,17 +176,6 @@ actions:
         - jem balancer addCommonHost -h ${@i.intIP}
         - sudo service varnish reload
       user: root
-
-  setupRDConnect:
-    - setupRDconfig:
-        id: ${nodes.nosqldb.first.id}
-        passtype: RD_SESSION_PASS
-        config: ${this.config}
-
-    - setupRDconfig:
-        id: ${nodes.nosqldb.last.id}
-        passtype: RD_CACHE_PASS
-        config: ${this.config}
 
   setupRDconfig:
     script: |
