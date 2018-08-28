@@ -14,8 +14,18 @@ categories:
 - apps/clusters
 - apps/dev-and-admin-tools
 id: magento-ls
-logo: https://raw.githubusercontent.com/layershift/magento/master/images/magento.png
+logo: https://raw.githubusercontent.com/layershift/magento-cluster/master/images/magento.png
 name: Auto-Scalable Magento Cluster
+
+settings:
+  fields:
+    name: magento_version
+    caption: Magento version
+    type: list
+    values:
+      Magento-CE-2.2.5.tar.gz: Magento CE 2.2.5
+      Magento-CE-2.2.5-sample.tar.gz: Magento CE 2.2.5 with sample data
+    default: Magento-CE-2.2.5.tar.gz
 
 globals:
   PATH: https://raw.githubusercontent.com/layershift/magento-cluster/master
@@ -25,7 +35,7 @@ globals:
   DB_NAME: magento
   RD_PASS: "${fn.password(10)}"
   ADMIN_PASSWD: "${fn.password(10)}"
-  magento_version: "Magento CE 2.2.x"
+  MAG_VERSION: "Magento CE 2.2.x"
 
 success: 'Below you will find your admin panel URL, username and password.</br></br>
   <table style=''font-size:13px; border: none;''><tr><td>Admin panel URL:</td><td
@@ -119,22 +129,23 @@ onInstall:
 
 - log: Downloading, Unpacking, Installation and Patching Magento
 - cmd[storage]:
-  - rm -rf /data/* && wget -qO- '${globals.PATH}/releases/Magento-CE-2.2.5.tar.gz' | tar xz -C /data/
+  - rm -rf /data/* && wget -qO- '${globals.PATH}/releases/${settings.magento_version}' | tar xz -C /data/
   - chown 700:700 -Rh /data/
 
-- cmd[cp]: wget ${globals.PATH}/configs/nginx/site-default-mg2.conf -O /etc/nginx/conf.d/site-default.conf
-- setupCP
-- cmd[${nodes.cp.first.id}]:
-    - wget ${globals.PATH}/configs/varnish/varnish-probe.php -O ${globals.MAGE_ROOT}/pub/varnish-probe.php
-    - wget ${globals.PATH}/scripts/setupMG2.sh -O /tmp/setupMG2.sh && bash -x /tmp/setupMG2.sh
-      ${globals.DB_USER} ${globals.DB_PASS} DB_MASTER ${globals.DB_NAME} ${globals.ADMIN_PASSWD}
-      ${globals.MAGE_ROOT} ${env.url} ${user.email} &>> /var/log/run.log
-    - wget ${globals.PATH}/configs/magento/env.php -O ${globals.MAGE_ROOT}/app/etc/env.php
-    - sed -ri 's|_DBNAME_|${globals.DB_NAME}|g' ${globals.MAGE_ROOT}/app/etc/env.php
-    - sed -ri 's|_DBUSER_|${globals.DB_USER}|g' ${globals.MAGE_ROOT}/app/etc/env.php
-    - sed -ri 's|_DBPASS_|${globals.DB_PASS}|g' ${globals.MAGE_ROOT}/app/etc/env.php
-- setupRDConnect:
-    config: /data/app/etc/env.php
+- if (/Magento-CE-2/.test("${settings.magento_version}")):
+    - cmd[cp]: wget ${globals.PATH}/configs/nginx/site-default-mg2.conf -O /etc/nginx/conf.d/site-default.conf
+    - setupCP
+    - cmd[${nodes.cp.first.id}]:
+        - wget ${globals.PATH}/configs/varnish/varnish-probe.php -O ${globals.MAGE_ROOT}/pub/varnish-probe.php
+        - wget ${globals.PATH}/scripts/setupMG2.sh -O /tmp/setupMG2.sh && bash -x /tmp/setupMG2.sh
+          ${globals.DB_USER} ${globals.DB_PASS} DB_MASTER ${globals.DB_NAME} ${globals.ADMIN_PASSWD}
+          ${globals.MAGE_ROOT} ${env.url} ${user.email} &>> /var/log/run.log
+        - wget ${globals.PATH}/configs/magento/env.php -O ${globals.MAGE_ROOT}/app/etc/env.php
+        - sed -ri 's|_DBNAME_|${globals.DB_NAME}|g' ${globals.MAGE_ROOT}/app/etc/env.php
+        - sed -ri 's|_DBUSER_|${globals.DB_USER}|g' ${globals.MAGE_ROOT}/app/etc/env.php
+        - sed -ri 's|_DBPASS_|${globals.DB_PASS}|g' ${globals.MAGE_ROOT}/app/etc/env.php
+    - setupRDConnect:
+        config: /data/app/etc/env.php
 
 actions:
   setupCP:
